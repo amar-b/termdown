@@ -76,6 +76,7 @@ Options:
                                 "%H:%M:%S", ignores --no-seconds)
 
   -D, --date-format TEXT        Format for --end (defaults to "%Y-%m-%d")
+  -M, --stopwatch-no-hours      Format stopwatch with "%M:%S" instead of "%H:%M:%S"
   --help                        Show this message and exit.
 ```
 

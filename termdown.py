@@ -115,18 +115,21 @@ def format_seconds(seconds, hide_seconds=False):
     return output.strip()
 
 
-def format_seconds_alt(seconds, start, hide_seconds=False):
+def format_seconds_alt(seconds, start, hide_seconds=False, stopwatch_no_hours=False):
     # make sure we always show at least 00:00:00
-    start = max(start, 86400)
+    max_duration = 3600 if stopwatch_no_hours else 86400
+    start = max(start, max_duration)
     output = ""
     total_seconds = seconds
-    for period_seconds in (
+    periods = [
         31557600,
         86400,
         3600,
         60,
-        1,
-    ):
+    1]
+    if stopwatch_no_hours:
+        periods.pop(0)
+    for period_seconds in periods:
         if hide_seconds and period_seconds == 1 and total_seconds > 60:
             break
         actual_period_value = int(seconds / period_seconds)
@@ -554,8 +557,9 @@ def stopwatch(
     time=False,
     time_format=None,
     voice_prefix=None,
+    stopwatch_no_hours=False,
     **kwargs
-):
+):  
     curses_lock, input_queue, quit_event = setup(stdscr)
     figlet = Figlet(font=font)
 
@@ -583,7 +587,7 @@ def stopwatch(
             if time:
                 stopwatch_text = datetime.now().strftime(time_format)
             elif alt_format:
-                stopwatch_text = format_seconds_alt(seconds_elapsed, 0, hide_seconds=no_seconds)
+                stopwatch_text = format_seconds_alt(seconds_elapsed, 0, hide_seconds=no_seconds, stopwatch_no_hours=stopwatch_no_hours)
             else:
                 stopwatch_text = format_seconds(seconds_elapsed, hide_seconds=no_seconds)
             with curses_lock:
@@ -771,6 +775,8 @@ def input_thread_body(stdscr, input_queue, quit_event, curses_lock):
                    "ignores --no-seconds)".format(DEFAULT_TIME_FORMAT))
 @click.option("-D", "--date-format", default=None,
               help="Format for --end (defaults to \"{}\")".format(DEFAULT_DATE_FORMAT))
+@click.option("--stopwatch-no-hours", default=False, is_flag=True,
+              help="ormat stopwatch with '%M:%S' instead of '%H:%M:%S'")
 @click.argument('timespec', metavar="[TIME]", required=False)
 def main(**kwargs):
     """
